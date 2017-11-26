@@ -40,7 +40,11 @@ DEBUG_DFLAGS += -g -d -debug -unittest -w
 # DEBUG_DFLAGS += dfl_debug.lib -g -debug -unittest -w
 
 # 標準でデバッグ時のコンパイルオプションを追加する
-DFLAGS += $(DEBUG_DFLAGS)
+ifeq ($(BUILD_TYPE), release)
+	DFLAGS += $(RELEASE_DFLAGS)
+else
+	DFLAGS += $(DEBUG_DFLAGS)
+endif
 
 ########################################################
 # リンカオプションの設定
@@ -123,7 +127,7 @@ all: $(TARGET)
 .PHONY: debug release
 debug: all
 release:
-	$(MAKE) rebuild "DFLAGS=$(DFLAGS) $(RELEASE_DFLAGS)"
+	$(MAKE) rebuild "BUILD_TYPE=release"
 
 # clean: 生成したすべてのターゲット (*.obj, *.map, *.exe) を削除
 .PHONY: clean
