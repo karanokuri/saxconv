@@ -51,37 +51,39 @@ private:
 		return p;
 	}
 
-	double[] pitchShift(out double[] out_data, in double[] in_data, double pitch, void delegate(double) progress_dg = null)
+	R pitchShift(R, F)(R range, F pitch, void delegate(double) dg = null)
+    if (isRandomAccessRange!R && hasLength!R && isFloatingPoint!F)
+  in
+  {
+    assert(pitch > 0.0);
+  }
+  body
 	{
-		enforce(pitch > 0.0);
+		enum SINC_LEN = 24;
+
+    import std.conv : to;
+    import std.algorithm : fill;
 
 		if (pitch == 1.0)
+			return range;
+
+		auto data = timeStretch(range, 1/pitch, dg);
+
+    R ret;
+		ret.length = range.length;
+		ret.fill(0);
+
+    // リサンプリング
+    for (size_t i = 0; i < ret.length; i++)
 		{
-			out_data = in_data.dup;
-			return out_data;
+			auto t = pitch * i;
+			auto offset = t.to!int;
+			for (size_t j = offset - SINC_LEN/2; j <= offset + SINC_LEN/2; j++)
+				if (0 <= j && j < data.length)
+					ret[i] += data[j] * sinc(PI * (t - j));
 		}
 
-		const J = 24;
-		int offset, m, n;
-		double t;
-		double[] data;
-
-		timeStretch(data, in_data, 1/pitch, progress_dg);
-
-		out_data.length = in_data.length;
-		out_data[] = 0;
-		for (n = 0; n < out_data.length; n++)
-		{
-			t = pitch * n;
-			offset = cast(int)t;
-			for (m = offset - J / 2; m <= offset + J / 2; m++)
-			{
-				if (m >= 0 && m < data.length)
-					out_data[n] += data[m] * sinc(PI * (t - m));
-			}
-		}
-
-		return out_data;
+		return ret;
 	}
 
   R timeStretch(R, F)(R range, F rate, void delegate(double) dg = null)
