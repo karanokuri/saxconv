@@ -326,11 +326,11 @@ public:
 
 		if (fmt.channel == 2)
 		{
-			timeStretch(ldata, ldata.dup, rate, (dg != null) ? delegate(double p){ dg(p / 2);       } : null);
-			timeStretch(rdata, rdata.dup, rate, (dg != null) ? delegate(double p){ dg(p / 2 + 0.5); } : null);
+			ldata = timeStretch(ldata, rate, dg ? delegate(double p){ dg(p/2);       } : null);
+			ldata = timeStretch(rdata, rate, dg ? delegate(double p){ dg(p/2 + 0.5); } : null);
 		}
 		else
-			timeStretch(ldata, ldata.dup, rate, dg);
+			ldata = timeStretch(ldata, rate, dg);
 	}
 
 	// ------------------------------------------------------------------------------------------------------------------
