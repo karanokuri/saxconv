@@ -84,88 +84,101 @@ private:
 		return out_data;
 	}
 
-	double[] timeStretch(out double[] out_data, in double[] in_data, double rate, void delegate(double) progress_dg = null)
-	{
-		//enforce(0.5 <= rate);
+  R timeStretch(R, F)(R range, F rate, void delegate(double) dg = null)
+    if (isRandomAccessRange!R && hasLength!R && isFloatingPoint!F)
+  {
+    import std.conv : to;
+    import std.algorithm : fill;
 
-		if (rate == 1.0)
-		{
-			out_data = in_data.dup;
-			return out_data;
-		}
+    if (rate == 1.0)
+      return range;
 
-		int m, n, template_size, pmin, pmax, p, q, offset0, offset1;
+    R ret;
+    ret.length = cast(size_t)(range.length / rate) + 1;
+		ret.fill(0);
 
-		out_data.length = cast(size_t)(in_data.length / rate) + 1;
+    // 自己相関をとるサンプル数
+    int corrLen = (fmt.samples_per_sec * 0.01).to!int;
 
-		template_size = cast(int)(fmt.samples_per_sec * 0.01); /* 10ms */
-		pmin = cast(int)(fmt.samples_per_sec * 0.005); /* 5ms */
-		pmax = cast(int)(fmt.samples_per_sec * 0.02); /* 20ms */
+    // 相関関数の最大値を探索する範囲
+    int pmin    = (fmt.samples_per_sec * 0.005).to!int;
+    int pmax    = (fmt.samples_per_sec * 0.02).to!int;
 
-		offset0 = offset1 = 0;
-		if (rate > 1.0)
-		{
-			while (offset0 + pmax * 2 < in_data.length && offset1 + pmax * 2 < out_data.length)
-			{
-				if(progress_dg)
-					progress_dg( cast(double)offset0 / in_data.length );
+    int offset0, offset1;
+    if (rate > 1.0)
+    {
+      while (offset0 + pmax*2 < range.length && offset1 + pmax*2 < ret.length)
+      {
+        if(dg)
+          dg(offset0.to!double / range.length);
 
-				p = autoCorrelation(in_data[offset0 .. (offset0 + pmax)], template_size, pmin);
+        // 相関関数の値が最も大きい周期を基本周期とみなす
+        auto period = peakOfAutoCorrelation(range[offset0..$], corrLen, pmin, pmax);
 
-				for (n = 0; n < p; n++)
-				{
-					//out_data[offset1 + n] = in_data[offset0 + n] * (p - n) / p; /* 単調減少の重みづけ */
-					//out_data[offset1 + n] += in_data[offset0 + p + n] * n / p; /* 単調増加の重みづけ */
-					// = i(p - n)/p + jn/p   = (ip - in)/p + jn/p = ( ip - in + jn )/p
-					// = { ip + (j - i)n }/p = i + (j - i)n/p
-					out_data[offset1 + n] = (in_data[offset0 + n + p] - in_data[offset0 + n]) * n / p + in_data[offset0 + n];
-				}
+        for (int i = 0; i < period; i++)
+        {
+          // オーバーラップアド
+          //ret[offset1+i] = range[offset0+i]*(p - i)/p; // 単調減少の重みづけ
+          //ret[offset1+i] += range[offset0+p+i]*i/p;    // 単調増加の重みづけ
+          // 上の二つの式を整理したもの
+          // range[offset0 + i] = a , range[offset0 + p + i] = b とおくと、
+          // ret[offset1 + i] に代入される値は以下のように表すことができる
+          //   a(p - i)/p + bi/p = {a(p - i) + bi}/p
+          // = (ap - ai + bi)/p  = {ap + (-a + b)i}/p
+          // = a + (b - a)i/p
+          ret[offset1+i] = (range[offset0+i+period] - range[offset0+i])*i/period
+                            + range[offset0+i];
+        }
 
-				q = cast(int)(p / (rate - 1.0) + 0.5);
-				for (n = p; n < q; n++)
-				{
-					if (offset0 + p + n >= in_data.length)
-						break;
-					out_data[offset1 + n] = in_data[offset0 + p + n];
-				}
+        // offset0, offset1 の更新
+        auto q = (period/(rate - 1.0) + 0.5).to!int;
+        for (int i = period; i < q; i++)
+        {
+          if (offset0+period+i >= range.length)
+            break;
+          ret[offset1+i] = range[offset0+period+i];
+        }
+        offset0 += period + q;
+        offset1 += q;
+      }
+    }
+    else	// rate < 1.0
+    {
+      while (offset0 + pmax * 2 < range.length)
+      {
+        if(dg)
+          dg(offset0.to!double / range.length);
 
-				offset0 += p + q; /* offset0の更新 */
-				offset1 += q; /* offset1の更新 */
-			}
-		}
-		else	// rate < 1.0
-		{
-			while (offset0 + pmax * 2 < in_data.length)
-			{
-				if(progress_dg)
-					progress_dg( cast(double)(offset0 + pmax) / in_data.length );
+        // 相関関数の値が最も大きい周期を基本周期とみなす
+        auto period = peakOfAutoCorrelation(range[offset0..$], corrLen, pmin, pmax);
 
-				p = autoCorrelation(in_data[offset0 .. (offset0 + pmax)], template_size, pmin);
+        for (size_t i = 0; i < period; i++)
+        {
+          ret[offset1 + i] = range[offset0 + i];
 
-				for (n = 0; n < p; n++)
-					out_data[offset1 + n] = in_data[offset0 + n];
-				for (n = 0; n < p; n++)
-				{
-					//out_data[offset1 + p + n] = in_data[offset0 + p + n] * (p - n) / p; /* 単調減少の重みづけ */
-					//out_data[offset1 + p + n] += in_data[offset0 + n] * n / p; /* 単調増加の重みづけ */
-					out_data[offset1 + p + n] = (in_data[offset0 + n] - in_data[offset0 + n + p]) * n / p + in_data[offset0 + n + p];
-				}
+          // オーバーラップアド
+          //ret[offset1+p+i] = range[offset0+p+i]*(p - i)/p; // 単調減少の重みづけ
+          //ret[offset1+p+i] += range[offset0+i]*i/p;        // 単調増加の重みづけ
+          // rate > 1 のときと同様にして上の式を整理したもの
+          ret[offset1+period+i] = (range[offset0+i] - range[offset0+i+period])*i/period
+                                + range[offset0+i+period];
+        }
 
-				q = cast(int)(p * rate / (1.0 - rate) + 0.5);
-				for (n = p; n < q; n++)
-				{
-					if (offset0 + n >= in_data.length)
-						break;
-					out_data[offset1 + p + n] = in_data[offset0 + n];
-				}
+        // offset0, offset1 の更新
+        auto q = (period*rate/(1.0 - rate) + 0.5).to!int;
+        for (size_t i = period; i < q; i++)
+        {
+          if (offset0 + i >= range.length)
+            break;
+          ret[offset1+period+i] = range[offset0+i];
+        }
+        offset0 += q;
+        offset1 += period + q;
+      }
+    }
 
-				offset0 += q; /* offset0の更新 */
-				offset1 += p + q; /* offset1の更新 */
-			}
-		}
-
-		return out_data;
-	}
+    return ret;
+  }
 
 	// ------------------------------------------------------------------------------------------------------------------
 public:
