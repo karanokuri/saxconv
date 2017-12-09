@@ -344,7 +344,7 @@ public:
    *    rate = 何倍の速度に変更するか
    *    dg   = 処理の進行度合いを表現するデリゲート
    */
-	void timeStretch(double rate, void delegate(double) dg = null)
+	void timeStretch(F)(F rate, void delegate(double) dg = null)
 	{
 		if (rate == 1.0)
 			return;
