@@ -1,3 +1,4 @@
-src/*.obj
-src/*.res
+*.obj
+*.res
 saxconv.exe
+build_tools
