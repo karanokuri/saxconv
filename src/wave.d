@@ -316,22 +316,22 @@ public:
 	}
 
 	// ------------------------------------------------------------------------------------------------------------------
-	void timeStretch(double rate, void delegate(double) progress_dg = null)
+	void timeStretch(double rate, void delegate(double) dg = null)
 	{
 		if (rate == 1.0)
 			return;
 
 		if (fmt.channel == 2)
 		{
-			timeStretch(ldata, ldata.dup, rate, (progress_dg != null) ? delegate(double p){ progress_dg(p / 2);       } : null);
-			timeStretch(rdata, rdata.dup, rate, (progress_dg != null) ? delegate(double p){ progress_dg(p / 2 + 0.5); } : null);
+			timeStretch(ldata, ldata.dup, rate, (dg != null) ? delegate(double p){ dg(p / 2);       } : null);
+			timeStretch(rdata, rdata.dup, rate, (dg != null) ? delegate(double p){ dg(p / 2 + 0.5); } : null);
 		}
 		else
-			timeStretch(ldata, ldata.dup, rate, progress_dg);
+			timeStretch(ldata, ldata.dup, rate, dg);
 	}
 
 	// ------------------------------------------------------------------------------------------------------------------
-	void pitchShift(double pitch, void delegate(double) progress_dg = null)
+	void pitchShift(double pitch, void delegate(double) dg = null)
 	{
 		enforce(pitch > 0);
 
@@ -340,19 +340,19 @@ public:
 
 		if (fmt.channel == 2)
 		{
-			pitchShift(ldata, ldata.dup, pitch, (progress_dg != null) ? delegate(double p){ progress_dg(p / 2);       } : null);
-			pitchShift(rdata, rdata.dup, pitch, (progress_dg != null) ? delegate(double p){ progress_dg(p / 2 + 0.5); } : null);
+			pitchShift(ldata, ldata.dup, pitch, (dg != null) ? delegate(double p){ dg(p / 2);       } : null);
+			pitchShift(rdata, rdata.dup, pitch, (dg != null) ? delegate(double p){ dg(p / 2 + 0.5); } : null);
 		}
 		else
-			pitchShift(ldata, ldata.dup, pitch, progress_dg);
+			pitchShift(ldata, ldata.dup, pitch, dg);
 	}
 
-	void semitoneShift(int semitone, void delegate(double) progress_dg = null)
+	void semitoneShift(int semitone, void delegate(double) dg = null)
 	{
 		if (semitone == 0)
 			return;
 
-		pitchShift( pow(2, semitone / 12.0) , progress_dg);
+		pitchShift( pow(2, semitone / 12.0) , dg);
 	}
 }
 
