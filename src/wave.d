@@ -164,12 +164,24 @@ private:
 	// ------------------------------------------------------------------------------------------------------------------
 public:
 
+  /**
+   * wav ファイルを読み込む
+   *
+   * Params:
+   *    filename = wav ファイルのパス
+   */
 	this(string filename)
 	{
 		this.read(filename);
 	}
 
 	// ------------------------------------------------------------------------------------------------------------------
+  /**
+   * wav ファイルを読み込む
+   *
+   * Params:
+   *    filename = wav ファイルのパス
+   */
 	void read(string filename)
 	{
 		byte[] read_data;
@@ -239,6 +251,12 @@ public:
 			throw new Exception("チャンネル数が不正です");
 	}
 
+  /**
+   * wav ファイルを書き出す
+   *
+   * Params:
+   *    filename = wav ファイルのパス
+   */
 	void write(string filename)
 	{
 		enforce(fmt.channel == 1 || fmt.channel == 2, "チャンネル数が不正です");
@@ -319,6 +337,13 @@ public:
 	}
 
 	// ------------------------------------------------------------------------------------------------------------------
+  /**
+   * 曲の速度を変更する
+   *
+   * Params:
+   *    rate = 何倍の速度に変更するか
+   *    dg   = 処理の進行度合いを表現するデリゲート
+   */
 	void timeStretch(double rate, void delegate(double) dg = null)
 	{
 		if (rate == 1.0)
@@ -334,6 +359,13 @@ public:
 	}
 
 	// ------------------------------------------------------------------------------------------------------------------
+  /**
+   * ピッチをシフトする
+   *
+   * Params:
+   *    pitch = シフトするピッチの値
+   *    dg    = 処理の進行度合いを表現するデリゲート
+   */
 	void pitchShift(double pitch, void delegate(double) dg = null)
 	{
 		enforce(pitch > 0);
@@ -350,6 +382,13 @@ public:
 			ldata = pitchShift(ldata, pitch, dg);
 	}
 
+  /**
+   * 半音単位でピッチをシフトする
+   *
+   * Params:
+   *    semitone = 半音でいくつ分ピッチをシフトするか
+   *    dg       = 処理の進行度合いを表現するデリゲート
+   */
 	void semitoneShift(int semitone, void delegate(double) dg = null)
 	{
 		if (semitone == 0)
