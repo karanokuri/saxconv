@@ -366,7 +366,7 @@ public:
    *    pitch = シフトするピッチの値
    *    dg    = 処理の進行度合いを表現するデリゲート
    */
-	void pitchShift(double pitch, void delegate(double) dg = null)
+	void pitchShift(F)(F pitch, void delegate(double) dg = null)
 	{
 		enforce(pitch > 0);
 
