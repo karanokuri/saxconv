@@ -169,19 +169,6 @@ private:
 
 	// ------------------------------------------------------------------------------------------------------------------
 public:
-	@property
-	{
-		ref double[] lData() { return ldata; }
-		ref double[] rData() { return rdata; }
-
-		size_t length() { return ldata.length; }
-		void length(size_t l) { ldata.length = l; rdata.length = l; }
-
-		int samplesPerSec()          { return fmt.samples_per_sec; }
-		void samplesPerSec(int i)    { fmt.samples_per_sec = i; }
-		ushort bitsPerSample()       { return fmt.bits_per_sample; }
-		void bitsPerSample(ushort i) { enforce(i == 8 || i == 16); fmt.bits_per_sample = i; }
-	}
 
 	this(string filename)
 	{
