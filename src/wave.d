@@ -10,60 +10,60 @@ import signalprocessing;
 class Wave
 {
 private:
-	double[] ldata;
-	double[] rdata;
+  double[] ldata;
+  double[] rdata;
 
-	union st_fmt_chunk
-	{
-		struct
-		{
-			char[4] id = "fmt ";
-			int size = 16;
-			short format = 1;
-			short channel = 1;
-			int samples_per_sec;
-			int bytes_per_sec;
-			ushort block_size = 1;
-			ushort bits_per_sample = 8;
-		}
-		byte[24] bytes;
-	}
-	st_fmt_chunk fmt;
+  union st_fmt_chunk
+  {
+    struct
+    {
+      char[4] id = "fmt ";
+      int size = 16;
+      short format = 1;
+      short channel = 1;
+      int samples_per_sec;
+      int bytes_per_sec;
+      ushort block_size = 1;
+      ushort bits_per_sample = 8;
+    }
+    byte[24] bytes;
+  }
+  st_fmt_chunk fmt;
 
-	R pitchShift(R, F)(R range, F pitch, void delegate(double) dg = null)
+  R pitchShift(R, F)(R range, F pitch, void delegate(double) dg = null)
     if (isRandomAccessRange!R && hasLength!R && isFloatingPoint!F)
   in
   {
     assert(pitch > 0.0);
   }
   body
-	{
-		enum SINC_LEN = 24;
+  {
+    enum SINC_LEN = 24;
 
     import std.conv : to;
     import std.algorithm : fill;
 
-		if (pitch == 1.0)
-			return range;
+    if (pitch == 1.0)
+      return range;
 
-		auto data = timeStretch(range, 1/pitch, dg);
+    auto data = timeStretch(range, 1/pitch, dg);
 
     R ret;
-		ret.length = range.length;
-		ret.fill(0);
+    ret.length = range.length;
+    ret.fill(0);
 
     // リサンプリング
     for (size_t i = 0; i < ret.length; i++)
-		{
-			auto t = pitch * i;
-			auto offset = t.to!int;
-			for (size_t j = offset - SINC_LEN/2; j <= offset + SINC_LEN/2; j++)
-				if (0 <= j && j < data.length)
-					ret[i] += data[j] * sinc(PI * (t - j));
-		}
+    {
+      auto t = pitch * i;
+      auto offset = t.to!int;
+      for (size_t j = offset - SINC_LEN/2; j <= offset + SINC_LEN/2; j++)
+        if (0 <= j && j < data.length)
+          ret[i] += data[j] * sinc(PI * (t - j));
+    }
 
-		return ret;
-	}
+    return ret;
+  }
 
   R timeStretch(R, F)(R range, F rate, void delegate(double) dg = null)
     if (isRandomAccessRange!R && hasLength!R && isFloatingPoint!F)
@@ -76,7 +76,7 @@ private:
 
     R ret;
     ret.length = cast(size_t)(range.length / rate) + 1;
-		ret.fill(0);
+    ret.fill(0);
 
     // 自己相関をとるサンプル数
     int corrLen = (fmt.samples_per_sec * 0.01).to!int;
@@ -123,7 +123,7 @@ private:
         offset1 += q;
       }
     }
-    else	// rate < 1.0
+    else  // rate < 1.0
     {
       while (offset0 + pmax * 2 < range.length)
       {
@@ -169,10 +169,10 @@ public:
    * Params:
    *    filename = wav ファイルのパス
    */
-	this(string filename)
-	{
-		this.read(filename);
-	}
+  this(string filename)
+  {
+    this.read(filename);
+  }
 
   /**
    * wav ファイルを読み込む
@@ -180,74 +180,74 @@ public:
    * Params:
    *    filename = wav ファイルのパス
    */
-	void read(string filename)
-	{
-		byte[] read_data;
-		size_t offset;
-		byte[4] chunk_id;
-		double[] data;
+  void read(string filename)
+  {
+    byte[] read_data;
+    size_t offset;
+    byte[4] chunk_id;
+    double[] data;
 
-		union _chunk_size
-		{
-			int i;
-			byte[4] bytes;
-		}
-		_chunk_size chunk_size;
+    union _chunk_size
+    {
+      int i;
+      byte[4] bytes;
+    }
+    _chunk_size chunk_size;
 
-		union _two_bytes
-		{
-			short s;
-			byte[2] bytes;
-		}
-		_two_bytes two_bytes;
+    union _two_bytes
+    {
+      short s;
+      byte[2] bytes;
+    }
+    _two_bytes two_bytes;
 
-		read_data = cast(byte[])std.file.read(filename);
+    read_data = cast(byte[])std.file.read(filename);
 
-		enforce(read_data[0..4]  == "RIFF", "riff形式ではありません");
-		enforce(read_data[8..12] == "WAVE", "waveファイルではありません");
+    enforce(read_data[0..4]  == "RIFF", "riff形式ではありません");
+    enforce(read_data[8..12] == "WAVE", "waveファイルではありません");
 
-		fmt.bytes[] = read_data[12..36];
-		enforce(fmt.id == "fmt ", "fmtチャンクが存在しません");
+    fmt.bytes[] = read_data[12..36];
+    enforce(fmt.id == "fmt ", "fmtチャンクが存在しません");
 
-		offset = 12 + 8 + fmt.size;
-		do	// dataチャンクを見つけ、チャンクの大きさを読む
-		{
-			offset += chunk_size.i;
-			chunk_id[] = read_data[offset .. (offset + 4)];	offset += 4;
-			chunk_size.bytes[] = read_data[offset .. (offset + 4)];	offset += 4;
-		}
-		while (chunk_id != "data");
+    offset = 12 + 8 + fmt.size;
+    do  // dataチャンクを見つけ、チャンクの大きさを読む
+    {
+      offset += chunk_size.i;
+      chunk_id[] = read_data[offset .. (offset + 4)]; offset += 4;
+      chunk_size.bytes[] = read_data[offset .. (offset + 4)]; offset += 4;
+    }
+    while (chunk_id != "data");
 
-		if (fmt.bits_per_sample == 16)
-		{
-			data.length = chunk_size.i / 2;
-			for(int i = 0; i < data.length; i++)
-			{
-				two_bytes.bytes[] = read_data[offset .. (offset + 2)];	offset += 2;
-				data[i] = two_bytes.s / 32768.0;
-			}
-		}
-		else if (fmt.bits_per_sample ==  8)
-		{
-			data.length = chunk_size.i;
-			foreach(i, d; read_data[offset .. (offset + chunk_size.i)])
-				data[i] = (d - 128.0) / 128.0;	// 音データを-1以上1未満の範囲に正規化する
-		}
-		else
-			throw new Exception("サンプルあたりのbit数が不正です");
+    if (fmt.bits_per_sample == 16)
+    {
+      data.length = chunk_size.i / 2;
+      for(int i = 0; i < data.length; i++)
+      {
+        two_bytes.bytes[] = read_data[offset .. (offset + 2)];  offset += 2;
+        data[i] = two_bytes.s / 32768.0;
+      }
+    }
+    else if (fmt.bits_per_sample ==  8)
+    {
+      data.length = chunk_size.i;
+      foreach(i, d; read_data[offset .. (offset + chunk_size.i)])
+        data[i] = (d - 128.0) / 128.0;  // 音データを-1以上1未満の範囲に正規化する
+    }
+    else
+      throw new Exception("サンプルあたりのbit数が不正です");
 
-		if (fmt.channel == 2)
-		{
-			ldata.length = data.length / 2;
-			rdata.length = data.length / 2;
-			for (int i = 0; i < data.length; i++)
-				(i % 2 == 0 ? ldata[i/2] : rdata[i/2]) = data[i];
-		}
-		else if(fmt.channel == 1)
-			ldata = rdata = data;
-		else
-			throw new Exception("チャンネル数が不正です");
-	}
+    if (fmt.channel == 2)
+    {
+      ldata.length = data.length / 2;
+      rdata.length = data.length / 2;
+      for (int i = 0; i < data.length; i++)
+        (i % 2 == 0 ? ldata[i/2] : rdata[i/2]) = data[i];
+    }
+    else if(fmt.channel == 1)
+      ldata = rdata = data;
+    else
+      throw new Exception("チャンネル数が不正です");
+  }
 
   /**
    * wav ファイルを書き出す
@@ -255,84 +255,84 @@ public:
    * Params:
    *    filename = wav ファイルのパス
    */
-	void write(string filename)
-	{
-		enforce(fmt.channel == 1 || fmt.channel == 2, "チャンネル数が不正です");
-		enforce(fmt.bits_per_sample == 8 || fmt.bits_per_sample == 16, "サンプルあたりのbit数が不正です");
+  void write(string filename)
+  {
+    enforce(fmt.channel == 1 || fmt.channel == 2, "チャンネル数が不正です");
+    enforce(fmt.bits_per_sample == 8 || fmt.bits_per_sample == 16, "サンプルあたりのbit数が不正です");
 
-		union _write_data
-		{
-			struct
-			{
-				char[4] riff_chunk_ID;
-				uint riff_chunk_size;
-				char[4] riff_form_type;
-				byte[24] fmt_chunk;
-				char[4] data_chunk_ID;
-				uint data_chunk_size;
-			}
-			byte[8 + 36] b;
-			short[44 / 2] s;
-		}
-		_write_data write_data;
-		auto write_fmt = fmt;
-		int data_len;
-		double[] data;
-		double d;
+    union _write_data
+    {
+      struct
+      {
+        char[4] riff_chunk_ID;
+        uint riff_chunk_size;
+        char[4] riff_form_type;
+        byte[24] fmt_chunk;
+        char[4] data_chunk_ID;
+        uint data_chunk_size;
+      }
+      byte[8 + 36] b;
+      short[44 / 2] s;
+    }
+    _write_data write_data;
+    auto write_fmt = fmt;
+    int data_len;
+    double[] data;
+    double d;
 
-		write_fmt.size = 16;
-		data_len = ldata.length * (fmt.bits_per_sample / 8) * fmt.channel;
+    write_fmt.size = 16;
+    data_len = ldata.length * (fmt.bits_per_sample / 8) * fmt.channel;
 
-		with (write_data)
-		{
-			riff_chunk_ID = "RIFF";
-			riff_chunk_size = 36 + data_len;
-			riff_form_type = "WAVE";
-			fmt_chunk = write_fmt.bytes;
-			data_chunk_ID = "data";
-			data_chunk_size = data_len;
-		}
+    with (write_data)
+    {
+      riff_chunk_ID = "RIFF";
+      riff_chunk_size = 36 + data_len;
+      riff_form_type = "WAVE";
+      fmt_chunk = write_fmt.bytes;
+      data_chunk_ID = "data";
+      data_chunk_size = data_len;
+    }
 
-		if (fmt.channel == 2)
-		{
-			data.length = ldata.length * 2;
-			for (int i = 0; i < data.length; i++)
-				data[i] = (i % 2 == 0 ? ldata[i/2] : rdata[i/2]);
-		}
-		else if (fmt.channel == 1)
-			data = ldata;
+    if (fmt.channel == 2)
+    {
+      data.length = ldata.length * 2;
+      for (int i = 0; i < data.length; i++)
+        data[i] = (i % 2 == 0 ? ldata[i/2] : rdata[i/2]);
+    }
+    else if (fmt.channel == 1)
+      data = ldata;
 
-		if (fmt.bits_per_sample == 16)
-		{
-			short[] s = new short[data.length];
-			for (int i = 0; i < data.length; i++)
-			{
-				d = (data[i] + 1.0) / 2.0 * 65536.0;
-				if (d > 65535.0)
-					d = 65535.0;
-				else if (d < 0.0)
-					d = 0.0;
-				s[i] = cast(short)(d - 32768); /* 四捨五入とオフセットの調節 */
-			}
-			std.file.write(filename, write_data.s ~ s);
-		}
-		else if (fmt.bits_per_sample == 8)
-		{
-			byte[] b = new byte[data.length];
-			for (int i = 0; i < data.length; i++)
-			{
-				d = (data[i] + 1.0) / 2.0 * 256.0;
-				if (d > 255.0)
-					d = 255.0;
-				else if (d < 0.0)
-					d = 0.0;
-				b[i] = cast(byte)(d + 0.5); /* 四捨五入 */
-			}
-			std.file.write(filename, write_data.b ~ b);
-		}
+    if (fmt.bits_per_sample == 16)
+    {
+      short[] s = new short[data.length];
+      for (int i = 0; i < data.length; i++)
+      {
+        d = (data[i] + 1.0) / 2.0 * 65536.0;
+        if (d > 65535.0)
+          d = 65535.0;
+        else if (d < 0.0)
+          d = 0.0;
+        s[i] = cast(short)(d - 32768); /* 四捨五入とオフセットの調節 */
+      }
+      std.file.write(filename, write_data.s ~ s);
+    }
+    else if (fmt.bits_per_sample == 8)
+    {
+      byte[] b = new byte[data.length];
+      for (int i = 0; i < data.length; i++)
+      {
+        d = (data[i] + 1.0) / 2.0 * 256.0;
+        if (d > 255.0)
+          d = 255.0;
+        else if (d < 0.0)
+          d = 0.0;
+        b[i] = cast(byte)(d + 0.5); /* 四捨五入 */
+      }
+      std.file.write(filename, write_data.b ~ b);
+    }
 
-		delete data;
-	}
+    delete data;
+  }
 
   /**
    * 曲の速度を変更する
@@ -341,19 +341,19 @@ public:
    *    rate = 何倍の速度に変更するか
    *    dg   = 処理の進行度合いを表現するデリゲート
    */
-	void timeStretch(F)(F rate, void delegate(double) dg = null)
-	{
-		if (rate == 1.0)
-			return;
+  void timeStretch(F)(F rate, void delegate(double) dg = null)
+  {
+    if (rate == 1.0)
+      return;
 
-		if (fmt.channel == 2)
-		{
-			ldata = timeStretch(ldata, rate, dg ? delegate(double p){ dg(p/2);       } : null);
-			ldata = timeStretch(rdata, rate, dg ? delegate(double p){ dg(p/2 + 0.5); } : null);
-		}
-		else
-			ldata = timeStretch(ldata, rate, dg);
-	}
+    if (fmt.channel == 2)
+    {
+      ldata = timeStretch(ldata, rate, dg ? delegate(double p){ dg(p/2);       } : null);
+      ldata = timeStretch(rdata, rate, dg ? delegate(double p){ dg(p/2 + 0.5); } : null);
+    }
+    else
+      ldata = timeStretch(ldata, rate, dg);
+  }
 
   /**
    * ピッチをシフトする
@@ -362,24 +362,24 @@ public:
    *    pitch = シフトするピッチの値
    *    dg    = 処理の進行度合いを表現するデリゲート
    */
-	void pitchShift(F)(F pitch, void delegate(double) dg = null)
+  void pitchShift(F)(F pitch, void delegate(double) dg = null)
   in
   {
     assert(pitch > 0);
   }
   body
-	{
-		if (pitch == 1.0)
-			return;
+  {
+    if (pitch == 1.0)
+      return;
 
-		if (fmt.channel == 2)
-		{
-			ldata = pitchShift(ldata, pitch, dg ? delegate(double p){ dg(p/2);       } : null);
-			rdata = pitchShift(rdata, pitch, dg ? delegate(double p){ dg(p/2 + 0.5); } : null);
-		}
-		else
-			ldata = pitchShift(ldata, pitch, dg);
-	}
+    if (fmt.channel == 2)
+    {
+      ldata = pitchShift(ldata, pitch, dg ? delegate(double p){ dg(p/2);       } : null);
+      rdata = pitchShift(rdata, pitch, dg ? delegate(double p){ dg(p/2 + 0.5); } : null);
+    }
+    else
+      ldata = pitchShift(ldata, pitch, dg);
+  }
 
   /**
    * 半音単位でピッチをシフトする
@@ -388,11 +388,11 @@ public:
    *    semitone = 半音でいくつ分ピッチをシフトするか
    *    dg       = 処理の進行度合いを表現するデリゲート
    */
-	void semitoneShift(int semitone, void delegate(double) dg = null)
-	{
-		if (semitone == 0)
-			return;
+  void semitoneShift(int semitone, void delegate(double) dg = null)
+  {
+    if (semitone == 0)
+      return;
 
-		pitchShift( pow(2, semitone / 12.0) , dg);
-	}
+    pitchShift(pow(2, semitone/12.0), dg);
+  }
 }

@@ -59,5 +59,5 @@ T sinc(T)(T x)
 {
   import std.math : sin;
 
-	return (x == 0.0) ? (1.0) : (sin(x)/x);
+  return (x == 0.0) ? (1.0) : (sin(x)/x);
 }
