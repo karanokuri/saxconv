@@ -355,8 +355,3 @@ public:
 		pitchShift( pow(2, semitone / 12.0) , dg);
 	}
 }
-
-private real sinc(real x)
-{
-	return (x == 0.0) ? (1.0) : (sin(x)/x);
-}
