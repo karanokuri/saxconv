@@ -65,7 +65,9 @@ LFLAGS = lib\dfl.lib
 #   真っ黒なコマンドプロンプトが出てきてイヤーンな人は、
 #   以下のコメントを外してください。
 #
-LFLAGS += -L/exet:nt/su:windows:4.0
+ifeq ($(BUILD_TYPE), release)
+	LFLAGS += -L/exet:nt/su:windows:4.0
+endif
 
 ########################################################
 # コンパイルするソースファイルのあるディレクトリ
