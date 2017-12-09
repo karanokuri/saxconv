@@ -343,11 +343,11 @@ public:
 
 		if (fmt.channel == 2)
 		{
-			pitchShift(ldata, ldata.dup, pitch, (dg != null) ? delegate(double p){ dg(p / 2);       } : null);
-			pitchShift(rdata, rdata.dup, pitch, (dg != null) ? delegate(double p){ dg(p / 2 + 0.5); } : null);
+			ldata = pitchShift(ldata, pitch, dg ? delegate(double p){ dg(p/2);       } : null);
+			rdata = pitchShift(rdata, pitch, dg ? delegate(double p){ dg(p/2 + 0.5); } : null);
 		}
 		else
-			pitchShift(ldata, ldata.dup, pitch, dg);
+			ldata = pitchShift(ldata, pitch, dg);
 	}
 
 	void semitoneShift(int semitone, void delegate(double) dg = null)
