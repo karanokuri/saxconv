@@ -5,6 +5,7 @@
 @    powershell "iex((@('')*3+(cat '%~f0'|?{$_ -notlike '@*'}))-join[char]10)"
 @    set PATH=%CD%\mingw32\bin;%CD%\dmd2\windows\bin;%PATH%
 @  popd
+@  echo Building saxconv ...
 @  windres -i src\main.rc -o src\main.res
 @  set "FILES=src\main.res"
 @  set "FILES=%FILES% src\main.d"
