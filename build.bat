@@ -24,7 +24,7 @@
 $DebugPreference = "Stop"
 
 $7zUrl  = "https://sevenzip.osdn.jp/howto/9.20/"
-$DMDUrl = "http://downloads.dlang.org/releases/2.x/2.063/dmd.2.063.zip"
+$DMDUrl = "http://downloads.dlang.org/releases/2.x/2.063/dmd.2.063.2.zip"
 $UtlUrl = "https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/5.1.0/threads-posix/dwarf/i686-5.1.0-release-posix-dwarf-rt_v4-rev0.7z/download"
 
 if(!(Test-Path "7z.exe"))
