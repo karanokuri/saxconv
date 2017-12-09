@@ -367,9 +367,12 @@ public:
    *    dg    = 処理の進行度合いを表現するデリゲート
    */
 	void pitchShift(F)(F pitch, void delegate(double) dg = null)
+  in
+  {
+    assert(pitch > 0);
+  }
+  body
 	{
-		enforce(pitch > 0);
-
 		if (pitch == 1.0)
 			return;
 
