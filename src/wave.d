@@ -3,6 +3,9 @@ module wave;
 import std.file;
 import std.math;
 import std.exception;
+import std.range;
+import std.traits;
+import signalprocessing;
 
 class Wave
 {
