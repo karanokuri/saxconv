@@ -27,30 +27,6 @@ private:
 	}
 	st_fmt_chunk fmt;
 
-	// ------------------------------------------------------------------------------------------------------------------
-	int autoCorrelation(in double[] range, int N, int pmin)
-	{
-		double r;
-		double max_of_r = 0.0;
-		int p = pmin;
-		int pmax = range.length - N;
-
-		for (int m = pmin; m <= pmax; m++)
-		{
-			r = 0.0;
-			for (int n = 0; n < N; n++)
-				r += range[n] * range[m + n]; /* 相関関数 */
-
-			if (r > max_of_r)
-			{
-				max_of_r = r; /* 相関関数のピーク */
-				p = m; /* 音データの基本周期 */
-			}
-		}
-
-		return p;
-	}
-
 	R pitchShift(R, F)(R range, F pitch, void delegate(double) dg = null)
     if (isRandomAccessRange!R && hasLength!R && isFloatingPoint!F)
   in
