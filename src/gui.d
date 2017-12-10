@@ -33,8 +33,10 @@ private:
   {
     protected override void onPaint(PaintEventArgs ea)
     {
-      scope tfmt = new TextFormat(TextFormatFlags.NO_PREFIX
-      | TextFormatFlags.SINGLE_LINE | TextFormatFlags.NO_CLIP);
+      scope tfmt = new TextFormat(TextFormatFlags.NO_PREFIX   |
+                                  TextFormatFlags.SINGLE_LINE |
+                                  TextFormatFlags.NO_CLIP);
+
       tfmt.trimming = TextTrimming.ELLIPSIS_PATH;
       tfmt.alignment = TextAlignment.LEFT | TextAlignment.MIDDLE;
 
@@ -282,8 +284,10 @@ private:
 
   void convert(Object sender, EventArgs ea)
   {
-    if(!convFromList.selectedItem || !convToList.selectedItem || pathControl.path == ""
-       || convToList.selectedIndex == convFromList.selectedIndex)
+    if(!convFromList.selectedItem ||
+       !convToList.selectedItem   ||
+       pathControl.path == ""     ||
+       convToList.selectedIndex == convFromList.selectedIndex)
     {
       string errmsg;
 
@@ -291,8 +295,8 @@ private:
         errmsg ~= "\n\n変換元のサックスが選択されていません";
       if(!convToList.selectedItem)
         errmsg ~= "\n\n変換先のサックスが選択されていません";
-      if(convFromList.selectedItem && convToList.selectedItem
-         && convToList.selectedIndex == convFromList.selectedIndex)
+      if(convFromList.selectedItem && convToList.selectedItem &&
+         convToList.selectedIndex == convFromList.selectedIndex)
         errmsg ~= "\n\n変換元と変換先に同一のサックスが指定されています";
       if(pathControl.path == "")
         errmsg ~= "\n\n変換元のファイルが指定されていません";
@@ -321,8 +325,13 @@ private:
       delete convWave;
     convWave = new Wave(pathControl.path);
 
-    semitone = (convFromList.selectedIndex / 2) * 12 + (convFromList.selectedIndex % 2) * 5;  // 一度ソプリロの音階にまで上げる
-    semitone -= (convToList.selectedIndex / 2) * 12 + (convToList.selectedIndex % 2) * 5; // 変換先の音階にまで下げる
+    // 一度ソプリロの音階にまで上げる
+    semitone = (convFromList.selectedIndex / 2) * 12
+             + (convFromList.selectedIndex % 2) * 5;
+
+    // 変換先の音階にまで下げる
+    semitone -= (convToList.selectedIndex / 2) * 12
+              + (convToList.selectedIndex % 2) * 5;
 
     void progress_dg(double p)
     {
