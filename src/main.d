@@ -1,6 +1,5 @@
 import dfl.all;
 import gui;
-import wave;
 
 int main()
 {
